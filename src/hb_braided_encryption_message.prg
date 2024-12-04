@@ -20,13 +20,13 @@ function EncryptMessage(cMessage as character, /*@*/cKey)
     nLen:=Len(cMessage)
 
     if (empty(cKey))
-        hb_default(@cKey,GenPwd(nLen+hb_RandomInt(Int(Seconds()))%15,"QqWwEeRr456_TtYyUuIi#OoPpAaSs123-DdFfGgHhJj#KkL_Zz7890XxC-cVvBbNnMm!@#$%^&*()_+[]{}|;:,.<>?/~`0123456789"))
+        cKey:=GenPwd(nLen+hb_RandomInt(Int(Seconds()))%15,"QqWwEeRr456_TtYyUuIi#OoPpAaSs123-DdFfGgHhJj#KkL_Zz7890XxC-cVvBbNnMm!@#$%^&*()_+[]{}|;:,.<>?/~`0123456789")
     endif
 
     cEncrypted:=""
 
     for i := 1 to nLen
-        // Obtemos o código ASCII do caractere e ajustamos com base no padrão do trançado
+        // We obtain the ASCII code of the character and adjust it based on the braiding pattern.
         cEncrypted+=Chr(Asc(SubStr(cMessage,i,1))+GetBraidOffset(cKey,i))
     next i
 
@@ -42,7 +42,7 @@ function DecryptMessage(cEncrypted as character,cKey as character)
     cDecrypted := ""
 
     for i := 1 to nLen
-        // Reverte o ajuste feito pelo trançado
+        // Reverts the adjustment made by the braiding.
         cDecrypted+=Chr(Asc(Substr(cEncrypted,i,1))-GetBraidOffset(cKey,i))
     next i
 
@@ -56,27 +56,27 @@ static function GetBraidOffset(cKey as character, nIndex as numeric)
 
     nKeyLen:=Len(cKey)
 
-    //aqui obtenho o caracter conforme indice
+    //Here I obtain the character according to the index.
     cBraid:=SubStr(cKey,((nIndex-1)%nKeyLen)+1,1)
-    //aqui obtenho o indice ASCII correspondente
+    //Here I obtain the corresponding ASCII index.
     nBraid:=Asc(cBraid)
 
     nMod:=Int(Mod(nBraid,nKeyLen))
 
     if (nMod==0)
-        return(3) // Offset para cruzamento à direita
+        return(3) // Offset for rightward crossing
     elseif (nMod==1)
-        return(-2) // Offset para cruzamento à esquerda
+        return(-2) // Offset for leftward crossing
     else
         nMod:=Mod(nMod,2)
         if (nMod==0)
-            return(-1) // Offset para cruzamento à esquerda
+            return(-1) // Offset for leftward crossing
         elseif (nMod==1)
-            return(2) // Offset para cruzamento à direita
+            return(2) // Offset for rightward crossing
         endif
     endif
 
-    return(0) // Sem alteração
+    return(0) // No change
 
 static function GenPwd(nLen as numeric,cKSeed as character)
 
@@ -93,7 +93,7 @@ static function GenPwd(nLen as numeric,cKSeed as character)
 
     return(cPass)
 
-// Testando
+// Testing
 procedure Main(cEncrypted,cKey)
 
     local cMessage, cDecrypted as character

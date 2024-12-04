@@ -1,0 +1,163 @@
+/*
+    "TLPP braided key offset encryption" (criptografia por deslocamento de chave tranÃ§ada).
+    Released to Public Domain.
+*/
+
+#include "totvs.ch"
+#include "parmtype.ch"
+
+namespace dna.tech
+using namespace dna.tech
+
+class BraidedEncrypt
+    static method EncryptMessage(cMessage as character, /*@*/cKey) as character
+    static method DecryptMessage(cEncrypted as character,cKey as character) as character
+end class
+
+static method EncryptMessage(cMessage, /*@*/cKey) class BraidedEncrypt
+    paramtype 1 var cMessage as character
+    paramtype 2 var /*@*/cKey as character optional
+return(EncryptMessage(@cMessage,@cKey))
+
+static method DecryptMessage(cEncrypted,cKey) class BraidedEncrypt
+    paramtype 1 var cEncrypted as character
+    paramtype 2 var cKey as character
+return(DecryptMessage(@cEncrypted,@cKey))
+
+static function EncryptMessage(cMessage as character, /*@*/cKey) as character
+
+    local cEncrypted as character
+
+    local i,nLen as numeric
+
+    nLen:=Len(cMessage)
+
+    if (empty(cKey))
+        cKey:=GenPwd(nLen+Int(Randomize(1,Int(Seconds())%15)),"QqWwEeRr456_TtYyUuIi#OoPpAaSs123-DdFfGgHhJj#KkL_Zz7890XxC-cVvBbNnMm!@#$%^&*()_+[]{}|;:,.<>?/~`0123456789")
+    endif
+
+    cEncrypted:=""
+
+    for i := 1 to nLen
+        // We obtain the ASCII code of the character and adjust it based on the braiding pattern.
+        cEncrypted+=Chr(Asc(SubStr(cMessage,i,1))+GetBraidOffset(cKey,i))
+    next i
+
+    return(cEncrypted)
+
+static function DecryptMessage(cEncrypted as character,cKey as character) as character
+
+    local cDecrypted as character
+
+    local i,nLen as numeric
+
+    nLen:=Len(cEncrypted)
+    cDecrypted := ""
+
+    for i := 1 to nLen
+        // Reverts the adjustment made by the braiding.
+        cDecrypted+=Chr(Asc(Substr(cEncrypted,i,1))-GetBraidOffset(cKey,i))
+    next i
+
+    return(cDecrypted)
+
+static function GetBraidOffset(cKey as character, nIndex as numeric)
+
+    local cBraid as character
+
+    local nKeyLen,nBraid,nMod as numeric
+
+    nKeyLen:=Len(cKey)
+
+    //Here I obtain the character according to the index.
+    cBraid:=SubStr(cKey,((nIndex-1)%nKeyLen)+1,1)
+    //Here I obtain the corresponding ASCII index.
+    nBraid:=Asc(cBraid)
+
+    nMod:=Int(Mod(nBraid,nKeyLen))
+
+    if (nMod==0)
+        return(3) // Offset for rightward crossing
+    elseif (nMod==1)
+        return(-2) // Offset for leftward crossing
+    else
+        nMod:=Mod(nMod,2)
+        if (nMod==0)
+            return(-1) // Offset for leftward crossing
+        elseif (nMod==1)
+            return(2) // Offset for rightward crossing
+        endif
+    endif
+
+    return(0) // No change
+
+static function GenPwd(nLen as numeric,cKSeed as character)
+
+   local cLet as character
+   local cPass:="" as character
+
+   local i as numeric
+   local nCnt:=Len(cKSeed) as numeric
+
+   for i:=1 to nLen
+      cLet:=SubStr(cKSeed,Randomize(1,nCnt),1)
+      cPass+=cLet
+   next i
+
+    return(cPass)
+
+// Testing (1)
+procedure u_BraidedMainTestFromParameters()
+    local cEncrypted:='Jdnnq+"Vqpkf' as character,cKey:='?-_,LyZ4V/8(Oxpz_}dBRCZ' as character
+    u_BraidedMainTest(Encode64(cEncrypted),Encode64(cKey))
+return
+
+// Testing (2)
+procedure u_BraidedMainTest(cEncrypted as character,cKey as character)
+
+    local cMessage,cDecrypted,cResult,cEncrypted64,cKey64 as character
+
+    cMessage:="Hello, World!"
+
+    if Empty(cEncrypted) .and. Empty(cKey)
+
+        cEncrypted:=BraidedEncrypt():EncryptMessage(cMessage,@cKey)
+        cDecrypted:=BraidedEncrypt():DecryptMessage(cEncrypted, cKey)
+        cEncrypted64:=Encode64(cEncrypted)
+        cKey64:=Encode64(cKey)
+        beginContent var cResult
+            Key from TLPP: cKey
+            Encrypted from TLPP: cEncrypted
+            Decrypted from TLPP: cDecrypted
+            cEncrypted64, cKey64
+        endContent
+        cResult:=strTran(cResult,"cKey64",cKey64)
+        cResult:=strTran(cResult,"cEncrypted64",cEncrypted64)
+        cResult:=strTran(cResult,"cKey",cKey)
+        cResult:=strTran(cResult,"cEncrypted",cEncrypted)
+        cResult:=strTran(cResult,"cDecrypted",cDecrypted)
+        if (FindFunction("MsgInfo"))
+            MsgInfo(cResult,ProcName())
+        else
+            ConOut(ProcName(),cResult)
+        endif
+    else
+        cEncrypted:=Decode64(cEncrypted)
+        cKey:=Decode64(cKey)
+        cDecrypted:=BraidedEncrypt():DecryptMessage(cEncrypted,cKey)
+        beginContent var cResult
+            Encrypted from Parameters: cEncrypted
+            Key from Parameters: cKey
+            Decrypted from Parameters: cDecrypted
+        endContent
+        cResult:=strTran(cResult,"cKey",cKey)
+        cResult:=strTran(cResult,"cEncrypted",cEncrypted)
+        cResult:=strTran(cResult,"cDecrypted",cDecrypted)
+        if (FindFunction("MsgInfo"))
+            MsgInfo(cResult,ProcName())
+        else
+            ConOut(ProcName(),cResult)
+        endif
+    endif
+
+    return
