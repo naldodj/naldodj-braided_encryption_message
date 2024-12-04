@@ -6,12 +6,15 @@
 #include "totvs.ch"
 #include "parmtype.ch"
 
+#define __K_SEED__ "QqWwEeRr456_TtYyUuIi#OoPpAaSs123-DdFfGgHhJj#KkL_Zz7890XxC-cVvBbNnMm!@#$%^&*()_+[]{}|;:,.<>?/~`0123456789"
+
 namespace dna.tech
 using namespace dna.tech
 
 class BraidedEncrypt
     static method EncryptMessage(cMessage as character, /*@*/cKey) as character
     static method DecryptMessage(cEncrypted as character,cKey as character) as character
+    static method GenPWD(nLen as numeric,cKSeed as character) as character
 end class
 
 static method EncryptMessage(cMessage, /*@*/cKey) class BraidedEncrypt
@@ -24,6 +27,11 @@ static method DecryptMessage(cEncrypted,cKey) class BraidedEncrypt
     paramtype 2 var cKey as character
 return(DecryptMessage(@cEncrypted,@cKey))
 
+static method GenPWD(nLen,cKSeed) class BraidedEncrypt
+    paramtype 1 var nLen as numeric optional default (15+Int(Randomize(0,(1+Int(Seconds()))%15)))
+    paramtype 2 var cKSeed as character DEFAULT __K_SEED__
+return(GenPWD(@nLen,@cKSeed))
+
 static function EncryptMessage(cMessage as character, /*@*/cKey) as character
 
     local cEncrypted as character
@@ -33,7 +41,7 @@ static function EncryptMessage(cMessage as character, /*@*/cKey) as character
     nLen:=Len(cMessage)
 
     if (empty(cKey))
-        cKey:=GenPwd(nLen+Int(Randomize(1,Int(Seconds())%15)),"QqWwEeRr456_TtYyUuIi#OoPpAaSs123-DdFfGgHhJj#KkL_Zz7890XxC-cVvBbNnMm!@#$%^&*()_+[]{}|;:,.<>?/~`0123456789")
+        cKey:=BraidedEncrypt():GenPWD(nLen+Int(Randomize(0,(1+Int(Seconds()))%15)))
     endif
 
     cEncrypted:=""
@@ -91,18 +99,23 @@ static function GetBraidOffset(cKey as character, nIndex as numeric)
 
     return(0) // No change
 
-static function GenPwd(nLen as numeric,cKSeed as character)
+static function GenPWD(nLen as numeric,cKSeed as character)
 
-   local cLet as character
-   local cPass:="" as character
+    local cLet as character
+    local cPass:="" as character
 
-   local i as numeric
-   local nCnt:=Len(cKSeed) as numeric
+    local i as numeric
+    local nCnt as numeric
 
-   for i:=1 to nLen
-      cLet:=SubStr(cKSeed,Randomize(1,nCnt),1)
-      cPass+=cLet
-   next i
+    DEFAULT nLen:=(15+Int(Randomize(0,(1+Int(Seconds()))%15)))
+    DEFAULT cKSeed:=__K_SEED__
+
+    nCnt:=Len(cKSeed)
+
+    for i:=1 to nLen
+        cLet:=SubStr(cKSeed,Randomize(1,nCnt),1)
+        cPass+=cLet
+    next i
 
     return(cPass)
 

@@ -3,7 +3,10 @@
    Entries may not always be in chronological/commit order.
    See license at the end of file. */
 
-2024-12-07 04:30 UTC naldodj (Code and example added using the TLPP programming language)
+2024-12-04 13:13 UTC naldodj (New Features)
+  * src/tlpp_braided_encryption_message.tlpp
+
+2024-12-04 04:30 UTC naldodj (Code and example added using the TLPP programming language)
   + src/tlpp_braided_encryption_message.tlpp
   * src/hb_braided_encryption_message.prg
 
